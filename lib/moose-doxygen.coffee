@@ -2,7 +2,8 @@ DoxygenBrowserView = require "./moose-doxygen-browser-view"
 {CompositeDisposable} = require 'atom'
 path = require 'path'
 
-reMooseFramework = /\/moose\/framework\/[^\/]+\//
+reMooseFramework = /\/moose\/framework\/(include|src)\/[^\/]+/
+reMooseModules = /\/moose\/modules\/[^\/]+\/(include|src)\/[^\/]+/
 reCFile = /^(.+)\.[Ch]$/
 
 module.exports =
@@ -47,7 +48,10 @@ module.exports =
     # are we in framework?
     if filePath.match reMooseFramework
       doxyURL = "http://mooseframework.org/docs/doxygen/moose/class#{fileRoot}.html"
+    else if filePath.match reMooseModules
+      doxyURL = "http://mooseframework.org/docs/doxygen/modules/class#{fileRoot}.html"
     else
+      atom.notifications.addError 'Not a recognized MOOSE path.', dismissable: true
       return
 
     position = atom.config.get("moose-doxygen.browser.position")
