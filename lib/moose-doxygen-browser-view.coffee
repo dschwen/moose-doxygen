@@ -9,7 +9,7 @@ module.exports =
       style = if ["top", "bottom"].indexOf(p) > -1 then "width:100%;height:#{s}px" else "height:100%;width:#{s}px"
 
       @div style:style, =>
-        @div class:"web-search inline",  =>
+        @div class:"moose-doxygen inline",  =>
           @button "◀", outlet:"back", style:"float:left", class:"btn"
           @button "▶", outlet:"forward", style:"float:left", class:"btn"
           @button "close", outlet:"close", style:"float:right", class:"btn"

@@ -1,4 +1,4 @@
-DoxygenBrowserView = require "./moose-doxygen-browser-view"
+DoxygenBrowserView = null # require when needed
 {CompositeDisposable} = require 'atom'
 path = require 'path'
 
@@ -8,7 +8,7 @@ reCFile = /^(.+)\.[Ch]$/
 
 module.exports =
 
-  DoxygenBrowserView: null
+  view: null
   browserPanel: null
   subscriptions: null
 
@@ -61,17 +61,20 @@ module.exports =
       useragent: atom.config.get("moose-doxygen.browser.useragent"),
       position: position
     }
-    @DoxygenBrowserView = new DoxygenBrowserView(params, this)
+
+    DoxygenBrowserView ?= require "./moose-doxygen-browser-view"
+    @view = new DoxygenBrowserView params, this
+
     @browserPanel = switch position
-      when "top"    then atom.workspace.addTopPanel(item: @DoxygenBrowserView)
-      when "right"  then atom.workspace.addRightPanel(item: @DoxygenBrowserView)
-      when "bottom" then atom.workspace.addBottomPanel(item: @DoxygenBrowserView)
-      when "left"   then atom.workspace.addLeftPanel(item: @DoxygenBrowserView)
+      when "top"    then atom.workspace.addTopPanel item: @view
+      when "right"  then atom.workspace.addRightPanel item: @view
+      when "bottom" then atom.workspace.addBottomPanel item: @view
+      when "left"   then atom.workspace.addLeftPanel item: @view
 
   deactivate: ->
     @browserPanel.destroy()
     @subscriptions.dispose()
-    @DoxygenBrowserView.destroy()
+    @view.destroy()
 
   browserHide: ->
     @browserPanel?.hide()
