@@ -7,3 +7,6 @@
 
 ## 0.3.0
 * Use tabs for the Doxygen view
+
+## 0.4.0
+* Remove broken close button

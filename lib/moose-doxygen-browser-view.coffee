@@ -11,7 +11,6 @@ module.exports =
         @div class:"moose-doxygen inline",  =>
           @button "◀", outlet:"back", style:"float:left", class:"btn"
           @button "▶", outlet:"forward", style:"float:left", class:"btn"
-          @button "close", outlet:"close", style:"float:right", class:"btn"
         @tag "webview", src:"#{doxyURL}", useragent:"#{params.useragent}", outlet:"webview"
 
     initialize: (params, self) ->
@@ -19,8 +18,6 @@ module.exports =
       console.log "params", params
       console.log "@params", @params
       @self = self
-      @close.on "click", =>
-        @self.browserHide()
       @back.on "click", =>
         @webview[0].goBack()
       @forward.on "click", =>
