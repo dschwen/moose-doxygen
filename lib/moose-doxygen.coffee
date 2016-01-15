@@ -1,15 +1,27 @@
 DoxygenBrowserView = null # require when needed
 {CompositeDisposable} = require 'atom'
 path = require 'path'
+url = require 'url'
 
 reMooseFramework = /\/moose\/framework\/(include|src)\/[^\/]+/
 reMooseModules = /\/moose\/modules\/[^\/]+\/(include|src)\/[^\/]+/
 reCFile = /^(.+)\.[Ch]$/
 
+createDoxygenView = (mode, className) ->
+
+  params = {
+    mode: mode
+    className: className.match(/^\/(.*)/)[1]
+    useragent: atom.config.get("moose-doxygen.browser.useragent"),
+  }
+
+  DoxygenBrowserView ?= require "./moose-doxygen-browser-view"
+  new DoxygenBrowserView params, this
+
 module.exports =
 
   view: null
-  browserPanel: null
+  browserView: null
   subscriptions: null
 
   config:
@@ -32,6 +44,27 @@ module.exports =
     @subscriptions = new CompositeDisposable
     @subscriptions.add atom.commands.add 'atom-workspace', 'moose-doxygen:open': => @open()
 
+    atom.deserializers.add
+      name: 'DoxygenBrowserView'
+      deserialize: (uriToOpen) ->
+        {protocol, host, pathname} = url.parse(uriToOpen)
+        createDoxygenView host, pathname
+
+    atom.workspace.addOpener (uriToOpen) ->
+      try
+        {protocol, host, pathname} = url.parse(uriToOpen)
+      catch error
+        return
+
+      return unless protocol is 'moose-doxygen:'
+
+      try
+        pathname = decodeURI(pathname) if pathname
+      catch error
+        return
+
+      createDoxygenView host, pathname
+
   open: ->
     # get the current file name and path
     editor = atom.workspace.getActiveTextEditor()
@@ -47,29 +80,16 @@ module.exports =
 
     # are we in framework?
     if filePath.match reMooseFramework
-      doxyURL = "http://mooseframework.org/docs/doxygen/moose/class#{fileRoot}.html"
+      mode = 'moose'
     else if filePath.match reMooseModules
-      doxyURL = "http://mooseframework.org/docs/doxygen/modules/class#{fileRoot}.html"
+      mode = 'modules'
     else
       atom.notifications.addError 'Not a recognized MOOSE path.', dismissable: true
       return
 
-    position = atom.config.get("moose-doxygen.browser.position")
-    params = {
-      url: doxyURL,
-      size: atom.config.get("moose-doxygen.browser.size"),
-      useragent: atom.config.get("moose-doxygen.browser.useragent"),
-      position: position
-    }
-
-    DoxygenBrowserView ?= require "./moose-doxygen-browser-view"
-    @view = new DoxygenBrowserView params, this
-
-    @browserPanel = switch position
-      when "top"    then atom.workspace.addTopPanel item: @view
-      when "right"  then atom.workspace.addRightPanel item: @view
-      when "bottom" then atom.workspace.addBottomPanel item: @view
-      when "left"   then atom.workspace.addLeftPanel item: @view
+    atom.workspace.open "moose-doxygen://#{mode}/#{fileRoot}",
+      searchAllPanes: true
+      split: atom.config.get "moose-doxygen.browser.position"
 
   deactivate: ->
     @browserPanel.destroy()

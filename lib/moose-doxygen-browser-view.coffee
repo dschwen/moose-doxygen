@@ -1,21 +1,23 @@
 {View, $} = require "atom-space-pen-views"
 
 module.exports =
-
   class DoxygenBrowserView extends View
-    @content: (params, self) ->
-      p = params.position
-      s = params.size
-      style = if ["top", "bottom"].indexOf(p) > -1 then "width:100%;height:#{s}px" else "height:100%;width:#{s}px"
+    params: null
 
-      @div style:style, =>
+    @content: (params, self) ->
+      doxyURL = "http://mooseframework.org/docs/doxygen/#{params.mode}/class#{params.className}.html"
+
+      @div style: "width: 100%; height: 100%", =>
         @div class:"moose-doxygen inline",  =>
           @button "◀", outlet:"back", style:"float:left", class:"btn"
           @button "▶", outlet:"forward", style:"float:left", class:"btn"
           @button "close", outlet:"close", style:"float:right", class:"btn"
-        @tag "webview", src:"#{params.url}", useragent:"#{params.useragent}", outlet:"webview"
+        @tag "webview", src:"#{doxyURL}", useragent:"#{params.useragent}", outlet:"webview"
 
     initialize: (params, self) ->
+      @params = params
+      console.log "params", params
+      console.log "@params", @params
       @self = self
       @close.on "click", =>
         @self.browserHide()
@@ -23,3 +25,10 @@ module.exports =
         @webview[0].goBack()
       @forward.on "click", =>
         @webview[0].goForward()
+
+    getTitle: ->
+      console.log "title", @params.className
+      return @params.className
+
+    getIconName: ->
+      return "book"
