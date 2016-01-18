@@ -28,7 +28,7 @@ module.exports =
   view: null
   browserView: null
   subscriptions: null
-  urls: ['http://mooseframework.org/docs/doxygen/moose/classes.html', 'http://mooseframework.org/docs/doxygen/modules/classes.html']
+  doxyURLs: ['http://mooseframework.org/docs/doxygen/moose/classes.html', 'http://mooseframework.org/docs/doxygen/modules/classes.html']
   search: null
 
   config:
@@ -76,9 +76,9 @@ module.exports =
     loads = []
     newSearch = {}
     request ?= require 'request'
-    for url in @urls
+    for doxyURL in @doxyURLs
       loads.push new Promise (resolve, reject) ->
-        request url, (error, response, body) ->
+        request doxyURL, (error, response, body) ->
           reject() if error?
 
           # all hrefs are relative. Use this to build full URLs
@@ -110,12 +110,9 @@ module.exports =
 
   open: ->
     # check if the search data is loaded
-    console.log 'this is ', this
     if @search is null
       @loadSearchData()
       return
-
-    console.log "BOOM!"
 
     # get the current file name and path
     editor = atom.workspace.getActiveTextEditor()
