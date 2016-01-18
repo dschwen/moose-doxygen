@@ -1,4 +1,9 @@
-DoxygenBrowserView = null # require when needed
+# require when needed
+DoxygenBrowserView = null
+request = null
+cheerio = null
+
+# require right away
 {CompositeDisposable} = require 'atom'
 path = require 'path'
 url = require 'url'
@@ -23,6 +28,8 @@ module.exports =
   view: null
   browserView: null
   subscriptions: null
+  urls: ['http://mooseframework.org/docs/doxygen/moose/classes.html', 'http://mooseframework.org/docs/doxygen/modules/classes.html']
+  search: null
 
   config:
     browser:
@@ -65,7 +72,51 @@ module.exports =
 
       createDoxygenView host, pathname
 
+  loadSearchData: ->
+    loads = []
+    newSearch = {}
+    request ?= require 'request'
+    for url in @urls
+      loads.push new Promise (resolve, reject) ->
+        request url, (error, response, body) ->
+          reject() if error?
+
+          # all hrefs are relative. Use this to build full URLs
+          reqPath = response.req.path
+          pathname = reqPath.substring(0, reqPath.lastIndexOf("/"));
+
+          # process
+          cheerio ?= require 'cheerio'
+          dom = cheerio.load body
+
+          dom('a.el').each (i, link) ->
+            link = dom(link)
+            text = link.text()
+            href = pathname + '/' + link.attr('href')
+
+            if not (text of newSearch)
+              newSearch[text] = [href]
+            else
+              newSearch[text].push href
+
+          resolve()
+
+    Promise.all(loads)
+      .then =>
+        @search = newSearch
+        @open()
+      .catch ->
+        console.log "Failed to load"
+
   open: ->
+    # check if the search data is loaded
+    console.log 'this is ', this
+    if @search is null
+      @loadSearchData()
+      return
+
+    console.log "BOOM!"
+
     # get the current file name and path
     editor = atom.workspace.getActiveTextEditor()
     return unless editor?
